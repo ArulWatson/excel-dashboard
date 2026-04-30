@@ -1,0 +1,114 @@
+﻿@page "{id:int}"
+@model ExcelDash.Pages.Datasets.ViewModel
+@{
+    ViewData["Title"] = $"Dataset #{Model.DatasetId}";
+}
+
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <div>
+        <h1 class="h4 mb-1">@Model.FileName</h1>
+        <div class="text-muted small">
+            Dataset #@Model.DatasetId · Sheet: @Model.SheetName · Uploaded: @Model.UploadedAt.LocalDateTime.ToString("yyyy-MM-dd HH:mm")
+        </div>
+    </div>
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-secondary" asp-page="/Index">Upload Another</a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-12 col-lg-4">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h2 class="h6">Quick Stats</h2>
+                <dl class="row mb-0">
+                    <dt class="col-6 text-muted">Rows</dt>
+                    <dd class="col-6 text-end">@Model.RowCount</dd>
+                    <dt class="col-6 text-muted">Columns</dt>
+                    <dd class="col-6 text-end">@Model.ColumnCount</dd>
+                    <dt class="col-6 text-muted">Numeric cols</dt>
+                    <dd class="col-6 text-end">@Model.NumericColumns.Count</dd>
+                    <dt class="col-6 text-muted">Category</dt>
+                    <dd class="col-6 text-end">@(!string.IsNullOrWhiteSpace(Model.CategoryColumn) ? Model.CategoryColumn : "—")</dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mt-4">
+            <div class="card-body">
+                <h2 class="h6 mb-3">Columns</h2>
+                <div class="d-flex flex-wrap gap-2">
+                    @foreach (var col in Model.Headers)
+                    {
+                        var isNumeric = Model.NumericColumns.Contains(col);
+                        <span class="badge @(isNumeric ? "text-bg-primary" : "text-bg-light")">@col</span>
+                    }
+                </div>
+                <div class="text-muted small mt-2">Numeric columns are inferred from the data.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h2 class="h6 mb-3">Dashboard</h2>
+
+                @if (!Model.HasChart)
+                {
+                    <div class="text-muted">
+                        Not enough data to chart. Add at least one numeric column (and optionally a category column).
+                    </div>
+                }
+                else
+                {
+                    <canvas id="chart" height="120"></canvas>
+                    <div class="text-muted small mt-2">@Model.ChartSubtitle</div>
+                }
+            </div>
+        </div>
+
+        <div class="card shadow-sm mt-4">
+            <div class="card-body">
+                <h2 class="h6 mb-3">Preview (first @Model.PreviewRows.Count rows)</h2>
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped align-middle mb-0">
+                        <thead>
+                            <tr>
+                                @foreach (var h in Model.Headers)
+                                {
+                                    <th>@h</th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var r in Model.PreviewRows)
+                            {
+                                <tr>
+                                    @for (var i = 0; i < Model.Headers.Count; i++)
+                                    {
+                                        <td>@(i < r.Length ? r[i] : "")</td>
+                                    }
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts
+{
+    @if (Model.HasChart)
+    {
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+            const config = @Html.Raw(Model.ChartConfigJson);
+            const ctx = document.getElementById('chart').getContext('2d');
+            new Chart(ctx, config);
+        </script>
+    }
+}
+

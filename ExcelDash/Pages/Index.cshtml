@@ -1,0 +1,58 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Excel Dashboard";
+}
+
+<div class="row g-4">
+    <div class="col-12 col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h1 class="h4 mb-3">Upload Excel</h1>
+                <form method="post" enctype="multipart/form-data" asp-page-handler="Upload">
+                    <div class="mb-3">
+                        <label class="form-label" asp-for="ExcelFile">.xlsx file</label>
+                        <input class="form-control" asp-for="ExcelFile" type="file" accept=".xlsx" />
+                        <div class="form-text">First row is treated as headers. Only the first worksheet is used.</div>
+                        <span class="text-danger" asp-validation-for="ExcelFile"></span>
+                    </div>
+                    <button class="btn btn-primary" type="submit">Upload &amp; Build Dashboard</button>
+                </form>
+
+                @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+                {
+                    <div class="alert alert-danger mt-3 mb-0">@Model.ErrorMessage</div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h2 class="h5 mb-3">Recent Datasets</h2>
+
+                @if (Model.RecentDatasets.Count == 0)
+                {
+                    <div class="text-muted">No uploads yet.</div>
+                }
+                else
+                {
+                    <div class="list-group">
+                        @foreach (var d in Model.RecentDatasets)
+                        {
+                            <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                               asp-page="/Datasets/View" asp-route-id="@d.Id">
+                                <div>
+                                    <div class="fw-semibold">@d.FileName</div>
+                                    <div class="text-muted small">@d.UploadedAt.LocalDateTime.ToString("yyyy-MM-dd HH:mm") · @d.SheetName</div>
+                                </div>
+                                <span class="badge text-bg-secondary">#@d.Id</span>
+                            </a>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
